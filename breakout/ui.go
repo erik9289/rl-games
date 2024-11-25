@@ -21,7 +21,7 @@ const (
 func drawUI() {
 	// Display num_lives (as heart icons) in the upper left corner
 	for i := range numLives {
-		rl.DrawTextureEx(lives_img, rl.Vector2{X: float32(5 + (i * 14)), Y: 5}, 0, 0.4, rl.White)
+		rl.DrawTextureEx(livesImg, rl.Vector2{X: float32(5 + (i * 14)), Y: 5}, 0, 0.4, rl.White)
 	}
 
 	// Display the score in the center of the screen

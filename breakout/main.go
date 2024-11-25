@@ -22,9 +22,8 @@ const (
 )
 
 var (
-	// paddle_pos_x float32
-	ball_pos rl.Vector2
-	ball_dir rl.Vector2
+	ballPos rl.Vector2
+	ballDir rl.Vector2
 
 	started   bool
 	gameOver  bool
@@ -32,19 +31,18 @@ var (
 	highscore int
 	numLives  = maxLives
 
-	level_current int
-	level_cnt     int
+	levelCurrent int
+	levelCnt     int
 
 	gameOverSnd  rl.Sound
 	hitPaddleSnd rl.Sound
 	hitBlockSnd  rl.Sound
 
-	lives_img rl.Texture2D
+	livesImg rl.Texture2D
 
 	// Colors
-	bgColor     = rl.Color{150, 190, 220, 255}
-	ballColor   = rl.Color{200, 90, 20, 255}
-	paddleColor = rl.Color{50, 150, 90, 255}
+	bgColor   = rl.Color{150, 190, 220, 255}
+	ballColor = rl.Color{200, 90, 20, 255}
 )
 
 var dt float32
@@ -62,7 +60,7 @@ func main() {
 	hitPaddleSnd = rl.LoadSound("assets/hit_paddle.wav")
 	gameOverSnd = rl.LoadSound("assets/game_over.wav")
 	hitBlockSnd = rl.LoadSound("assets/hit_block.wav")
-	lives_img = rl.LoadTexture("assets/heart_32.png")
+	livesImg = rl.LoadTexture("assets/heart_32.png")
 
 	rl.SetTargetFPS(FPS)
 
@@ -78,7 +76,7 @@ func main() {
 
 		// Keep dt zero ('wait') until SPACEBAR is pressed to start the game
 		if !started {
-			ball_pos = rl.Vector2{
+			ballPos = rl.Vector2{
 				X: screenSize/2 + float32(math.Cos(rl.GetTime()))*screenSize/2.5,
 				Y: ballStartY,
 			}
@@ -86,40 +84,39 @@ func main() {
 			if rl.IsKeyPressed(rl.KeySpace) {
 				// Point the ball (vector) to the middle of the paddle
 				paddle_middle := rl.Vector2{X: paddle.X + paddle.Width/2, Y: paddle.Y}
-				ball_to_paddle := rl.Vector2Subtract(paddle_middle, ball_pos)
-				ball_dir = rl.Vector2Normalize(ball_to_paddle) // Normalize the direction vector to 1
+				ball_to_paddle := rl.Vector2Subtract(paddle_middle, ballPos)
+				ballDir = rl.Vector2Normalize(ball_to_paddle) // Normalize the direction vector to 1
 				started = true
 			}
 		} else if gameOver {
 			restart(true, paddle)
 			if rl.IsKeyPressed(rl.KeySpace) {
-				// restart(true)
 				started = true
 			}
-		} else {
-			dt = rl.GetFrameTime()
 		}
 
-		previous_ball_pos := ball_pos
-		ball_pos = rl.Vector2Add(ball_pos, rl.Vector2Scale(ball_dir, ballSpeed*dt))
+		dt = rl.GetFrameTime()
+
+		previous_ball_pos := ballPos
+		ballPos = rl.Vector2Add(ballPos, rl.Vector2Scale(ballDir, ballSpeed*dt))
 
 		// Check right wall and bounce
-		if ball_pos.X+ballRadius > screenSize {
-			ball_pos.X = screenSize - ballRadius
-			ball_dir = reflect(ball_dir, rl.Vector2{X: -1, Y: 0})
+		if ballPos.X+ballRadius > screenSize {
+			ballPos.X = screenSize - ballRadius
+			ballDir = reflect(ballDir, rl.Vector2{X: -1, Y: 0})
 		}
 		// Check left wall and bounce
-		if ball_pos.X-ballRadius < 0 {
-			ball_pos.X = 0 + ballRadius
-			ball_dir = reflect(ball_dir, rl.Vector2{X: 1, Y: 0})
+		if ballPos.X-ballRadius < 0 {
+			ballPos.X = 0 + ballRadius
+			ballDir = reflect(ballDir, rl.Vector2{X: 1, Y: 0})
 		}
 		// Check top wall and bounce
-		if ball_pos.Y-ballRadius < 0 {
-			ball_pos.Y = ballRadius
-			ball_dir = reflect(ball_dir, rl.Vector2{X: 0, Y: 1})
+		if ballPos.Y-ballRadius < 0 {
+			ballPos.Y = ballRadius
+			ballDir = reflect(ballDir, rl.Vector2{X: 0, Y: 1})
 		}
 		// Check bottom, this means game over/restart
-		if ball_pos.Y+ballRadius*6 > screenSize {
+		if ballPos.Y+ballRadius*6 > screenSize {
 			numLives -= 1
 			if numLives == 0 {
 				rl.PlaySound(gameOverSnd)
@@ -138,10 +135,10 @@ func main() {
 		paddle.UpdatePosition(dt, screenSize)
 
 		// Check for collision between ball and paddle
-		collisionNormal := paddle.CheckCollision(ball_pos, previous_ball_pos, ballRadius)
+		collisionNormal := paddle.CheckCollision(ballPos, previous_ball_pos, ballRadius)
 		// Apply the accumulated collision_normal and calculate the reflection
 		if rl.Vector2Length(collisionNormal) != 0 {
-			ball_dir = reflect(ball_dir, collisionNormal)
+			ballDir = reflect(ballDir, collisionNormal)
 			rl.PlaySound(hitPaddleSnd)
 		}
 
@@ -156,21 +153,19 @@ func main() {
 		rl.ClearBackground(bgColor)
 		rl.BeginMode2D(camera)
 
-		// rl.DrawRectangleRec(paddle.rect, paddleColor)
 		paddle.Draw()
-		rl.DrawCircleV(ball_pos, ballRadius, ballColor)
+		rl.DrawCircleV(ballPos, ballRadius, ballColor)
 		DrawBlocks()
 		drawUI()
 
 		rl.EndMode2D()
 		rl.EndDrawing()
 	}
-
 }
 
 func restart(reset bool, paddle *paddle.Paddle) {
 	paddle.X = screenSize/2 - paddle.Width/2
-	ball_pos = rl.Vector2{X: screenSize / 2, Y: ballStartY}
+	ballPos = rl.Vector2{X: screenSize / 2, Y: ballStartY}
 	started = false
 
 	// Reset the blocks if no lives left or at the start
@@ -178,8 +173,8 @@ func restart(reset bool, paddle *paddle.Paddle) {
 		numLives = maxLives
 		score = 0
 		gameOver = false
-		level_current = 0
-		level_cnt = 0
+		levelCurrent = 0
+		levelCnt = 0
 
 		initLevels()
 	}

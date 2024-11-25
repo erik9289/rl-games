@@ -64,7 +64,7 @@ func blockExists(x, y int) bool {
 	if x < 0 || y < 0 || x >= NumBlocksX || y >= NumBlocksY {
 		return false
 	}
-	return levels[level_current][x][y].visible
+	return levels[levelCurrent][x][y].visible
 }
 
 // Check for collisions with blocks
@@ -72,11 +72,11 @@ func checkBlockCollision(previousBallPos rl.Vector2) {
 block_x_loop:
 	for x := 0; x < NumBlocksX; x++ {
 		for y := 0; y < NumBlocksY; y++ {
-			if !levels[level_current][x][y].visible {
+			if !levels[levelCurrent][x][y].visible {
 				continue
 			}
 			blockRect := calcBlockRect(x, y)
-			if rl.CheckCollisionCircleRec(ball_pos, ballRadius, blockRect) {
+			if rl.CheckCollisionCircleRec(ballPos, ballRadius, blockRect) {
 				var collisionNormal = rl.Vector2{}
 				// Ball is above block
 				if previousBallPos.Y < blockRect.Y {
@@ -107,38 +107,38 @@ block_x_loop:
 
 				// Apply the accumulated collision_normal and calculate the reflection
 				if rl.Vector2Length(collisionNormal) != 0 {
-					ball_dir = reflect(ball_dir, collisionNormal)
+					ballDir = reflect(ballDir, collisionNormal)
 				}
 
 				// Now lower the shield or destroy the block!
 				rl.SetSoundPitch(hitBlockSnd, rl.Vector2Length(collisionNormal)*0.8)
 				rl.PlaySound(hitBlockSnd)
-				levels[level_current][x][y].shields -= 1
-				if levels[level_current][x][y].shields < 1 {
-					levels[level_current][x][y].visible = false
+				levels[levelCurrent][x][y].shields -= 1
+				if levels[levelCurrent][x][y].shields < 1 {
+					levels[levelCurrent][x][y].visible = false
 				}
 
 				// Update the score based on block row_colors
-				blockColor := levels[level_current][x][y].color
+				blockColor := levels[levelCurrent][x][y].color
 				score += blockColorScore[blockColor]
 				if score > highscore {
 					highscore = score
 				}
 
 				// Check if all blocks have been cleared, then go to next Level
-				if isLevelCleared(level_current) {
-					fmt.Printf("* cleared level! level_current = %d\n", level_current)
-					level_current = (level_current + 1) % NumLevels
-					if level_current == 0 {
+				if isLevelCleared(levelCurrent) {
+					fmt.Printf("* cleared level! levelCurrent = %d\n", levelCurrent)
+					levelCurrent = (levelCurrent + 1) % NumLevels
+					if levelCurrent == 0 {
 						// We cycled throug all available levels, reset the levels before we continue
 
 						initLevels()
 					}
-					level_cnt += 1
+					levelCnt += 1
 					fmt.Printf(
-						"updated level_current: level_current = %d, level_cnt=%d, NUM_LEVELS=%d\n",
-						level_current,
-						level_cnt,
+						"updated levelCurrent: levelCurrent = %d, levelCnt=%d, NumLevels=%d\n",
+						levelCurrent,
+						levelCnt,
 						NumLevels,
 					)
 				}
@@ -152,13 +152,13 @@ block_x_loop:
 func DrawBlocks() {
 	for x := 0; x < NumBlocksX; x++ {
 		for y := 0; y < NumBlocksY; y++ {
-			if !levels[level_current][x][y].visible {
+			if !levels[levelCurrent][x][y].visible {
 				continue // Skip blocks that are hit
 			}
 			block_rect := calcBlockRect(x, y)
 
 			// rl.DrawRectangleRec(block_rect, block_color_values[row_colors[y]])
-			rl.DrawRectangleRec(block_rect, blockColorValues[levels[level_current][x][y].color])
+			rl.DrawRectangleRec(block_rect, blockColorValues[levels[levelCurrent][x][y].color])
 			top_left := rl.Vector2{X: block_rect.X, Y: block_rect.Y}
 			top_right := rl.Vector2{X: block_rect.X + block_rect.Width, Y: block_rect.Y}
 			bottom_left := rl.Vector2{X: block_rect.X, Y: block_rect.Y + block_rect.Height}
